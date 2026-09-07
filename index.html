@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Warung Kentang — Kentang Goreng Panas &amp; Renyah</title>
+<meta name="description" content="Warung Kentang: kentang goreng saus tomat, saus mayo, keju, dan keriting. Pesan langsung lewat WhatsApp.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream:#FFF6E8;
+    --cream-2:#FDEDD2;
+    --wood:#4A2E1B;
+    --wood-2:#6B4226;
+    --gold:#E8A33D;
+    --gold-deep:#C97B2E;
+    --ketchup:#D6402C;
+    --ketchup-dark:#A62C1D;
+    --mayo:#FBF3DE;
+    --charcoal:#2B2118;
+    --ink-soft:#5C4A3A;
+    --paper:#FFFDF8;
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--cream);
+    color:var(--charcoal);
+    font-family:'Work Sans', sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.display{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:700;
+    color:var(--wood);
+    margin:0;
+  }
+  a{color:inherit;}
+  img{max-width:100%;display:block;}
+  button{font-family:inherit;cursor:pointer;}
+
+  .wrap{
+    max-width:1120px;
+    margin:0 auto;
+    padding:0 28px;
+  }
+
+  /* ---------- header ---------- */
+  header{
+    position:sticky;
+    top:0;
+    z-index:40;
+    background:var(--cream);
+    border-bottom:3px solid var(--wood);
+  }
+  .nav-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:18px 28px;
+    max-width:1120px;
+    margin:0 auto;
+  }
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .brand-mark{
+    width:42px;height:42px;
+    background:var(--ketchup);
+    border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Baloo 2',sans-serif;
+    font-weight:800;
+    color:var(--mayo);
+    font-size:20px;
+    transform:rotate(-6deg);
+    border:2px solid var(--wood);
+  }
+  .brand-name{
+    font-family:'Baloo 2',sans-serif;
+    font-weight:800;
+    font-size:22px;
+    color:var(--wood);
+    letter-spacing:0.2px;
+  }
+  nav ul{
+    list-style:none;
+    display:flex;
+    gap:28px;
+    margin:0;padding:0;
+  }
+  nav a{
+    text-decoration:none;
+    font-weight:600;
+    font-size:15px;
+    color:var(--ink-soft);
+    padding-bottom:3px;
+    border-bottom:2px solid transparent;
+    transition:border-color .2s ease, color .2s ease;
+  }
+  nav a:hover{color:var(--ketchup-dark);border-color:var(--ketchup-dark);}
+  .cart-btn{
+    position:relative;
+    background:var(--wood);
+    color:var(--cream);
+    border:none;
+    border-radius:999px;
+    padding:10px 18px 10px 16px;
+    font-weight:600;
+    font-size:14px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .cart-btn:hover{background:var(--wood-2);}
+  .cart-count{
+    background:var(--ketchup);
+    color:#fff;
+    border-radius:50%;
+    min-width:20px;height:20px;
+    font-size:12px;
+    display:flex;align-items:center;justify-content:center;
+    font-weight:700;
+  }
+  .menu-toggle{display:none;background:none;border:none;font-size:26px;color:var(--wood);}
+
+  /* ---------- hero ---------- */
+  .hero{
+    padding:64px 28px 40px;
+    position:relative;
+    overflow:hidden;
+  }
+  .hero-grid{
+    max-width:1120px;
+    margin:0 auto;
+    display:grid;
+    grid-template-columns:1.1fr 0.9fr;
+    gap:48px;
+    align-items:center;
+  }
+  .hero-eyebrow{
+    display:inline-block;
+    background:var(--gold);
+    color:var(--wood);
+    padding:6px 14px;
+    border-radius:999px;
+    font-weight:600;
+    font-size:13.5px;
+    margin-bottom:18px;
+    transform:rotate(-2deg);
+    border:2px solid var(--wood);
+  }
+  .hero h1{
+    font-size:46px;
+    line-height:1.12;
+    margin-bottom:20px;
+  }
+  .hero h1 span{
+    color:var(--ketchup);
+  }
+  .hero p{
+    font-size:17px;
+    line-height:1.65;
+    color:var(--ink-soft);
+    max-width:46ch;
+    margin-bottom:30px;
+  }
+  .hero-ctas{
+    display:flex;
+    gap:14px;
+    flex-wrap:wrap;
+  }
+  .btn-primary{
+    background:var(--ketchup);
+    color:#fff;
+    border:none;
+    padding:15px 26px;
+    border-radius:12px;
+    font-weight:600;
+    font-size:15.5px;
+    box-shadow:0 4px 0 var(--ketchup-dark);
+    transition:transform .12s ease;
+  }
+  .btn-primary:hover{transform:translateY(-2px);}
+  .btn-primary:active{transform:translateY(2px);box-shadow:0 2px 0 var(--ketchup-dark);}
+  .btn-ghost{
+    background:transparent;
+    color:var(--wood);
+    border:2px solid var(--wood);
+    padding:13px 24px;
+    border-radius:12px;
+    font-weight:600;
+    font-size:15.5px;
+  }
+  .btn-ghost:hover{background:var(--wood);color:var(--cream);}
+
+  .hero-photo{
+    position:relative;
+  }
+  .hero-photo-frame{
+    background:var(--paper);
+    border:2px solid var(--wood);
+    border-radius:18px;
+    padding:14px;
+    transform:rotate(2deg);
+    box-shadow:8px 10px 0 var(--gold-deep);
+  }
+  .hero-photo-frame img{
+    border-radius:12px;
+    width:100%;
+    height:340px;
+    object-fit:cover;
+  }
+  .hero-tag{
+    position:absolute;
+    bottom:-18px;
+    left:-18px;
+    background:var(--wood);
+    color:var(--cream);
+    padding:12px 18px;
+    border-radius:14px;
+    font-family:'Baloo 2',sans-serif;
+    font-weight:700;
+    font-size:15px;
+    transform:rotate(-4deg);
+    box-shadow:4px 5px 0 rgba(0,0,0,.18);
+  }
+  .hero-tag small{display:block;font-family:'Work Sans',sans-serif;font-weight:500;font-size:11.5px;color:var(--gold);}
+
+  /* wavy divider like a torn paper tray edge */
+  .scallop{
+    height:26px;
+    width:100%;
+    background:
+      radial-gradient(circle at 13px 0, transparent 13px, var(--wood) 13.5px) repeat-x;
+    background-size:26px 26px;
+    background-position:top;
+  }
+  .scallop.flip{transform:scaleY(-1);}
+
+  /* ---------- menu section ---------- */
+  .menu-section{
+    background:var(--wood);
+    padding:64px 28px 76px;
+  }
+  .menu-head{
+    max-width:1120px;
+    margin:0 auto 40px;
+    text-align:left;
+  }
+  .menu-head h2{
+    color:var(--cream);
+    font-size:34px;
+    margin-bottom:10px;
+  }
+  .menu-head p{
+    color:var(--gold);
+    font-size:16px;
+    max-width:56ch;
+    margin:0;
+  }
+
+  .menu-grid{
+    max-width:1120px;
+    margin:0 auto;
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:22px;
+  }
+
+  .card{
+    background:var(--paper);
+    border-radius:16px;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+    border:2px solid var(--wood-2);
+    transition:transform .18s ease, box-shadow .18s ease;
+  }
+  .card:hover{
+    transform:translateY(-6px);
+    box-shadow:0 12px 0 rgba(0,0,0,.22);
+  }
+  .card-photo{
+    position:relative;
+    height:190px;
+    overflow:hidden;
+  }
+  .card-photo img{
+    width:100%;height:100%;object-fit:cover;
+  }
+  .card-photo .scallop{
+    position:absolute;
+    bottom:-1px;left:0;
+    filter:none;
+  }
+  .card-photo .scallop{
+    background:
+      radial-gradient(circle at 13px 0, transparent 13px, var(--paper) 13.5px) repeat-x;
+    background-size:26px 26px;
+  }
+  .badge-spice{
+    position:absolute;
+    top:10px;right:10px;
+    background:var(--ketchup);
+    color:#fff;
+    font-size:11.5px;
+    font-weight:700;
+    padding:5px 10px;
+    border-radius:999px;
+    z-index:2;
+  }
+  .card-body{
+    padding:18px 18px 20px;
+    display:flex;
+    flex-direction:column;
+    flex:1;
+  }
+  .card-body h3{
+    font-size:19px;
+    margin-bottom:6px;
+    color:var(--wood);
+  }
+  .card-body p{
+    font-size:13.5px;
+    color:var(--ink-soft);
+    line-height:1.5;
+    margin:0 0 16px;
+    flex:1;
+  }
+  .card-footer{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+  }
+  .price{
+    font-family:'Baloo 2',sans-serif;
+    font-weight:700;
+    font-size:18px;
+    color:var(--ketchup-dark);
+  }
+  .add-btn{
+    background:var(--gold);
+    color:var(--wood);
+    border:2px solid var(--wood);
+    border-radius:10px;
+    padding:9px 14px;
+    font-weight:700;
+    font-size:13.5px;
+    white-space:nowrap;
+  }
+  .add-btn:hover{background:var(--gold-deep);color:#fff;}
+  .add-btn.added{background:var(--wood);color:var(--cream);border-color:var(--wood);}
+
+  /* ---------- how to order ---------- */
+  .steps-section{
+    padding:70px 28px;
+    background:var(--cream);
+  }
+  .steps-head{
+    max-width:1120px;margin:0 auto 36px;
+  }
+  .steps-head h2{font-size:32px;}
+  .steps-grid{
+    max-width:1120px;
+    margin:0 auto;
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:24px;
+  }
+  .step{
+    background:var(--mayo);
+    border:2px dashed var(--gold-deep);
+    border-radius:16px;
+    padding:26px 22px;
+  }
+  .step-num{
+    font-family:'Baloo 2',sans-serif;
+    font-weight:800;
+    font-size:26px;
+    color:var(--ketchup);
+    margin-bottom:8px;
+  }
+  .step h3{font-size:17px;margin-bottom:8px;}
+  .step p{font-size:14px;color:var(--ink-soft);line-height:1.55;margin:0;}
+
+  /* ---------- footer ---------- */
+  footer{
+    background:var(--wood);
+    color:var(--cream);
+    padding:48px 28px 28px;
+  }
+  .footer-grid{
+    max-width:1120px;margin:0 auto;
+    display:grid;
+    grid-template-columns:1.4fr 1fr 1fr;
+    gap:36px;
+    padding-bottom:28px;
+    border-bottom:1px solid rgba(255,255,255,.15);
+  }
+  footer h4{
+    font-family:'Baloo 2',sans-serif;
+    color:var(--gold);
+    font-size:15px;
+    margin-bottom:14px;
+  }
+  footer p, footer a{
+    font-size:14px;
+    color:#EADFCB;
+    line-height:1.7;
+    text-decoration:none;
+  }
+  footer ul{list-style:none;padding:0;margin:0;}
+  footer li{margin-bottom:8px;}
+  .foot-bottom{
+    max-width:1120px;margin:20px auto 0;
+    font-size:13px;
+    color:#C9B79C;
+    display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;
+  }
+
+  /* ---------- cart drawer ---------- */
+  .overlay{
+    position:fixed;inset:0;
+    background:rgba(43,33,24,.45);
+    opacity:0;pointer-events:none;
+    transition:opacity .25s ease;
+    z-index:60;
+  }
+  .overlay.open{opacity:1;pointer-events:auto;}
+
+  .drawer{
+    position:fixed;
+    top:0;right:0;
+    height:100%;
+    width:400px;
+    max-width:92vw;
+    background:var(--paper);
+    z-index:61;
+    transform:translateX(100%);
+    transition:transform .3s ease;
+    display:flex;
+    flex-direction:column;
+    border-left:3px solid var(--wood);
+  }
+  .drawer.open{transform:translateX(0);}
+  .drawer-head{
+    padding:20px 22px;
+    display:flex;align-items:center;justify-content:space-between;
+    border-bottom:2px solid var(--cream-2);
+    background:var(--wood);
+    color:var(--cream);
+  }
+  .drawer-head h3{color:var(--cream);font-size:19px;}
+  .drawer-close{
+    background:none;border:none;color:var(--cream);font-size:24px;line-height:1;
+  }
+  .drawer-items{
+    flex:1;
+    overflow-y:auto;
+    padding:16px 22px;
+  }
+  .drawer-empty{
+    text-align:center;
+    padding:60px 10px;
+    color:var(--ink-soft);
+  }
+  .drawer-empty .emoji{font-size:44px;margin-bottom:10px;}
+  .cart-item{
+    display:flex;
+    gap:12px;
+    padding:14px 0;
+    border-bottom:1px solid var(--cream-2);
+  }
+  .cart-item img{
+    width:64px;height:64px;object-fit:cover;border-radius:10px;border:2px solid var(--wood-2);
+  }
+  .cart-item-info{flex:1;}
+  .cart-item-info h4{font-size:14.5px;margin:0 0 4px;color:var(--wood);font-family:'Work Sans',sans-serif;font-weight:600;}
+  .cart-item-info .unit-price{font-size:12.5px;color:var(--ink-soft);margin-bottom:8px;}
+  .qty-row{display:flex;align-items:center;gap:10px;}
+  .qty-btn{
+    width:26px;height:26px;border-radius:50%;
+    border:2px solid var(--wood);
+    background:var(--cream);
+    font-weight:700;
+    display:flex;align-items:center;justify-content:center;
+    font-size:15px;
+    color:var(--wood);
+  }
+  .qty-val{font-weight:600;min-width:16px;text-align:center;}
+  .remove-btn{
+    background:none;border:none;color:var(--ketchup-dark);
+    font-size:12.5px;font-weight:600;text-decoration:underline;
+    margin-left:auto;
+  }
+  .item-line-total{
+    font-weight:700;color:var(--wood);
+    font-family:'Baloo 2',sans-serif;
+    align-self:flex-start;
+  }
+  .drawer-foot{
+    border-top:2px solid var(--cream-2);
+    padding:18px 22px 22px;
+  }
+  .total-row{
+    display:flex;justify-content:space-between;
+    font-family:'Baloo 2',sans-serif;
+    font-size:20px;font-weight:700;
+    color:var(--wood);
+    margin-bottom:14px;
+  }
+  .wa-btn{
+    width:100%;
+    background:#2FA84F;
+    color:#fff;
+    border:none;
+    padding:14px;
+    border-radius:12px;
+    font-weight:700;
+    font-size:15px;
+    display:flex;align-items:center;justify-content:center;gap:8px;
+  }
+  .wa-btn:hover{background:#268C41;}
+  .wa-btn:disabled{background:#B8CDBB;cursor:not-allowed;}
+
+  .toast{
+    position:fixed;
+    bottom:24px;
+    left:50%;
+    transform:translate(-50%,20px);
+    background:var(--wood);
+    color:var(--cream);
+    padding:12px 22px;
+    border-radius:999px;
+    font-size:14px;
+    font-weight:600;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .25s ease, transform .25s ease;
+    z-index:70;
+    box-shadow:0 6px 18px rgba(0,0,0,.25);
+  }
+  .toast.show{opacity:1;transform:translate(-50%,0);}
+
+  @media (max-width:920px){
+    .hero-grid{grid-template-columns:1fr;}
+    .hero h1{font-size:36px;}
+    .menu-grid{grid-template-columns:repeat(2,1fr);}
+    .steps-grid{grid-template-columns:1fr;}
+    .footer-grid{grid-template-columns:1fr;gap:24px;}
+    nav{
+      position:absolute;
+      top:100%;left:0;right:0;
+      background:var(--cream);
+      border-bottom:3px solid var(--wood);
+      display:none;
+    }
+    nav.open{display:block;}
+    nav ul{flex-direction:column;gap:0;padding:10px 28px 18px;}
+    nav a{display:block;padding:12px 0;border-bottom:1px solid var(--cream-2);}
+    .menu-toggle{display:block;}
+  }
+  @media (max-width:600px){
+    .menu-grid{grid-template-columns:1fr;}
+    .hero{padding:44px 20px 30px;}
+    .wrap,.nav-row{padding-left:18px;padding-right:18px;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="nav-row">
+    <div class="brand">
+      <div class="brand-mark">KG</div>
+      <div class="brand-name">Warung Kentang</div>
+    </div>
+    <nav id="mainNav">
+      <ul>
+        <li><a href="#menu">Menu</a></li>
+        <li><a href="#cara-pesan">Cara Pesan</a></li>
+        <li><a href="#kontak">Kontak</a></li>
+      </ul>
+    </nav>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <button class="cart-btn" id="openCart" aria-label="Buka keranjang">
+        Keranjang <span class="cart-count" id="cartCount">0</span>
+      </button>
+      <button class="menu-toggle" id="menuToggle" aria-label="Buka menu navigasi">&#9776;</button>
+    </div>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="hero-grid">
+    <div>
+      <span class="hero-eyebrow">Digoreng dadakan, bukan dipanaskan ulang</span>
+      <h1>Kentang goreng <span>panas &amp; renyah</span>, langsung dari wajan ke tanganmu.</h1>
+      <p>Empat pilihan kentang goreng dengan topping favorit orang Indonesia. Pilih menu, masukkan keranjang, dan kirim pesanan lewat WhatsApp — tanpa ribet, tanpa antre.</p>
+      <div class="hero-ctas">
+        <a href="#menu" class="btn-primary">Lihat Menu</a>
+        <a href="#cara-pesan" class="btn-ghost">Cara Pesan</a>
+      </div>
+    </div>
+    <div class="hero-photo">
+      <div class="hero-photo-frame">
+        <img src="images/keju.jpg" alt="Kentang goreng keju meleleh disiram saus keju cheddar">
+      </div>
+      <div class="hero-tag">Best seller<small>Kentang Goreng Keju</small></div>
+    </div>
+  </div>
+</section>
+
+<div class="scallop" style="background:radial-gradient(circle at 13px 0, transparent 13px, var(--wood) 13.5px) repeat-x;background-size:26px 26px;"></div>
+
+<section class="menu-section" id="menu">
+  <div class="menu-head">
+    <h2>Menu Kentang Goreng</h2>
+    <p>Semua kentang digoreng dua kali biar luarnya renyah dan dalamnya tetap lembut. Tambahkan ke keranjang, lalu pesan sekaligus lewat WhatsApp.</p>
+  </div>
+  <div class="menu-grid" id="menuGrid"></div>
+</section>
+
+<section class="steps-section" id="cara-pesan">
+  <div class="steps-head">
+    <h2>Cara Pesan</h2>
+  </div>
+  <div class="steps-grid">
+    <div class="step">
+      <div class="step-num">1</div>
+      <h3>Pilih kentang favoritmu</h3>
+      <p>Tentukan mau saus tomat, saus mayo, keju, atau keriting. Boleh pesan lebih dari satu jenis sekaligus.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <h3>Atur jumlah di keranjang</h3>
+      <p>Buka keranjang, sesuaikan jumlah porsi tiap menu, dan cek total harganya sebelum pesan.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <h3>Kirim via WhatsApp</h3>
+      <p>Tekan tombol pesan, pesananmu otomatis tersusun rapi dan tinggal dikirim ke nomor warung kami.</p>
+    </div>
+  </div>
+</section>
+
+<footer id="kontak">
+  <div class="footer-grid">
+    <div>
+      <h4>Warung Kentang</h4>
+      <p>Kentang goreng segar dengan empat pilihan topping. Dibuat sebagai contoh halaman toko online, siap dihosting gratis lewat GitHub Pages.</p>
+    </div>
+    <div>
+      <h4>Jam Buka</h4>
+      <ul>
+        <li>Senin–Jumat: 11.00–21.00</li>
+        <li>Sabtu–Minggu: 10.00–22.00</li>
+      </ul>
+    </div>
+    <div>
+      <h4>Kontak</h4>
+      <ul>
+        <li><a href="#" id="waLinkFooter">WhatsApp: 0812-3456-7890</a></li>
+        <li>Instagram: @warungkentang</li>
+      </ul>
+    </div>
+  </div>
+  <div class="foot-bottom">
+    <span>&copy; 2026 Warung Kentang. Halaman contoh, bukan toko sungguhan.</span>
+    <span>Dibuat dengan HTML, CSS &amp; JS — siap diunggah ke GitHub Pages.</span>
+  </div>
+</footer>
+
+<div class="overlay" id="overlay"></div>
+<aside class="drawer" id="drawer" aria-label="Keranjang belanja">
+  <div class="drawer-head">
+    <h3>Keranjang Kamu</h3>
+    <button class="drawer-close" id="closeCart" aria-label="Tutup keranjang">&times;</button>
+  </div>
+  <div class="drawer-items" id="drawerItems"></div>
+  <div class="drawer-foot">
+    <div class="total-row">
+      <span>Total</span>
+      <span id="cartTotal">Rp 0</span>
+    </div>
+    <button class="wa-btn" id="checkoutBtn" disabled>
+      Pesan via WhatsApp
+    </button>
+  </div>
+</aside>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const WHATSAPP_NUMBER = "6281234567890";
+
+  const PRODUCTS = [
+    {
+      id: "tomat",
+      name: "Kentang Goreng (Saus Tomat)",
+      desc: "Kentang goreng klasik potongan panjang, disajikan dengan saus tomat segar untuk cocolan.",
+      price: 15000,
+      img: "images/tomat.jpg",
+      tag: "Klasik"
+    },
+    {
+      id: "mayo",
+      name: "Kentang Goreng (Saus Mayo)",
+      desc: "Kentang goreng garing ditaburi rempah, dipadukan dengan saus mayo creamy.",
+      price: 17000,
+      img: "images/mayo.jpg",
+      tag: "Creamy"
+    },
+    {
+      id: "keju",
+      name: "Kentang Goreng (Keju)",
+      desc: "Kentang goreng crinkle cut disiram saus keju cheddar leleh yang gurih.",
+      price: 22000,
+      img: "images/keju.jpg",
+      tag: "Favorit"
+    },
+    {
+      id: "keriting",
+      name: "Kentang Goreng (Keriting)",
+      desc: "Kentang keriting berbumbu spiral, renyah di luar dan tetap lembut di dalam.",
+      price: 18000,
+      img: "images/keriting.jpg",
+      tag: "Renyah"
+    }
+  ];
+
+  const rupiah = (n) => "Rp " + n.toLocaleString("id-ID");
+
+  const menuGrid = document.getElementById("menuGrid");
+  PRODUCTS.forEach(p => {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = `
+      <div class="card-photo">
+        <span class="badge-spice">${p.tag}</span>
+        <img src="${p.img}" alt="${p.name}">
+        <div class="scallop"></div>
+      </div>
+      <div class="card-body">
+        <h3>${p.name}</h3>
+        <p>${p.desc}</p>
+        <div class="card-footer">
+          <span class="price">${rupiah(p.price)}</span>
+          <button class="add-btn" data-id="${p.id}">+ Keranjang</button>
+        </div>
+      </div>
+    `;
+    menuGrid.appendChild(card);
+  });
+
+  let cart = {};
+  try {
+    cart = JSON.parse(localStorage.getItem("warungKentangCart") || "{}");
+  } catch (e) { cart = {}; }
+
+  function saveCart(){
+    localStorage.setItem("warungKentangCart", JSON.stringify(cart));
+  }
+
+  function showToast(msg){
+    const t = document.getElementById("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    clearTimeout(showToast._timer);
+    showToast._timer = setTimeout(() => t.classList.remove("show"), 1800);
+  }
+
+  function addToCart(id){
+    cart[id] = (cart[id] || 0) + 1;
+    saveCart();
+    renderCart();
+    const p = PRODUCTS.find(x => x.id === id);
+    showToast(p.name + " ditambahkan ke keranjang");
+  }
+
+  function changeQty(id, delta){
+    if(!cart[id]) return;
+    cart[id] += delta;
+    if(cart[id] <= 0) delete cart[id];
+    saveCart();
+    renderCart();
+  }
+
+  function removeFromCart(id){
+    delete cart[id];
+    saveCart();
+    renderCart();
+  }
+
+  function renderCart(){
+    const items = Object.entries(cart);
+    const drawerItems = document.getElementById("drawerItems");
+    const cartCount = document.getElementById("cartCount");
+    const cartTotal = document.getElementById("cartTotal");
+    const checkoutBtn = document.getElementById("checkoutBtn");
+
+    const totalQty = items.reduce((sum, [, qty]) => sum + qty, 0);
+    cartCount.textContent = totalQty;
+
+    if(items.length === 0){
+      drawerItems.innerHTML = `
+        <div class="drawer-empty">
+          <div class="emoji">&#127839;</div>
+          <p>Keranjang masih kosong.<br>Yuk pilih kentang goreng favoritmu.</p>
+        </div>`;
+      cartTotal.textContent = rupiah(0);
+      checkoutBtn.disabled = true;
+      return;
+    }
+
+    let total = 0;
+    drawerItems.innerHTML = items.map(([id, qty]) => {
+      const p = PRODUCTS.find(x => x.id === id);
+      const lineTotal = p.price * qty;
+      total += lineTotal;
+      return `
+        <div class="cart-item">
+          <img src="${p.img}" alt="${p.name}">
+          <div class="cart-item-info">
+            <h4>${p.name}</h4>
+            <div class="unit-price">${rupiah(p.price)} / porsi</div>
+            <div class="qty-row">
+              <button class="qty-btn" data-action="dec" data-id="${id}" aria-label="Kurangi jumlah">-</button>
+              <span class="qty-val">${qty}</span>
+              <button class="qty-btn" data-action="inc" data-id="${id}" aria-label="Tambah jumlah">+</button>
+              <button class="remove-btn" data-action="remove" data-id="${id}">Hapus</button>
+            </div>
+          </div>
+          <div class="item-line-total">${rupiah(lineTotal)}</div>
+        </div>
+      `;
+    }).join("");
+
+    cartTotal.textContent = rupiah(total);
+    checkoutBtn.disabled = false;
+  }
+
+  document.getElementById("menuGrid").addEventListener("click", (e) => {
+    const btn = e.target.closest(".add-btn");
+    if(!btn) return;
+    addToCart(btn.dataset.id);
+    btn.classList.add("added");
+    btn.textContent = "Ditambahkan";
+    setTimeout(() => {
+      btn.classList.remove("added");
+      btn.textContent = "+ Keranjang";
+    }, 900);
+  });
+
+  document.getElementById("drawerItems").addEventListener("click", (e) => {
+    const btn = e.target.closest("button[data-action]");
+    if(!btn) return;
+    const id = btn.dataset.id;
+    if(btn.dataset.action === "inc") changeQty(id, 1);
+    if(btn.dataset.action === "dec") changeQty(id, -1);
+    if(btn.dataset.action === "remove") removeFromCart(id);
+  });
+
+  const overlay = document.getElementById("overlay");
+  const drawer = document.getElementById("drawer");
+
+  function openDrawer(){
+    overlay.classList.add("open");
+    drawer.classList.add("open");
+  }
+  function closeDrawer(){
+    overlay.classList.remove("open");
+    drawer.classList.remove("open");
+  }
+
+  document.getElementById("openCart").addEventListener("click", openDrawer);
+  document.getElementById("closeCart").addEventListener("click", closeDrawer);
+  overlay.addEventListener("click", closeDrawer);
+
+  document.getElementById("checkoutBtn").addEventListener("click", () => {
+    const items = Object.entries(cart);
+    if(items.length === 0) return;
+    let message = "Halo Warung Kentang, saya mau pesan:%0A";
+    let total = 0;
+    items.forEach(([id, qty]) => {
+      const p = PRODUCTS.find(x => x.id === id);
+      const lineTotal = p.price * qty;
+      total += lineTotal;
+      message += `- ${p.name} x${qty} (${rupiah(lineTotal)})%0A`;
+    });
+    message += `%0ATotal: ${rupiah(total)}`;
+    const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${message}`;
+    window.open(url, "_blank");
+  });
+
+  document.getElementById("waLinkFooter").addEventListener("click", (e) => {
+    e.preventDefault();
+    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=Halo%20Warung%20Kentang%2C%20saya%20mau%20bertanya.`, "_blank");
+  });
+
+  const menuToggle = document.getElementById("menuToggle");
+  const mainNav = document.getElementById("mainNav");
+  menuToggle.addEventListener("click", () => mainNav.classList.toggle("open"));
+  mainNav.addEventListener("click", (e) => {
+    if(e.target.tagName === "A") mainNav.classList.remove("open");
+  });
+
+  renderCart();
+</script>
+
+</body>
+</html>
