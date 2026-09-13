@@ -679,16 +679,8 @@ let orders = [];
 try { orders = JSON.parse(localStorage.getItem("warungKentangOrders") || "[]"); } catch(e){ orders = []; }
 function saveOrders(){ localStorage.setItem("warungKentangOrders", JSON.stringify(orders)); }
 
-let reviews = null;
-try { reviews = JSON.parse(localStorage.getItem("warungKentangReviews")); } catch(e){ reviews = null; }
-if(!reviews){
-  reviews = [
-    { id:"seed1", name:"Dinda", rating:5, comment:"Kentang kejunya meleleh banget, dianter cepat juga!", date:new Date(Date.now()-86400000*3).toISOString() },
-    { id:"seed2", name:"Raka", rating:4, comment:"Enak, tapi porsinya semoga bisa lebih besar lagi.", date:new Date(Date.now()-86400000*6).toISOString() },
-    { id:"seed3", name:"Salsa", rating:5, comment:"Saus mayonya juara, bakal order lagi minggu depan.", date:new Date(Date.now()-86400000*9).toISOString() }
-  ];
-  localStorage.setItem("warungKentangReviews", JSON.stringify(reviews));
-}
+let reviews = [];
+try { reviews = JSON.parse(localStorage.getItem("warungKentangReviews") || "[]"); } catch(e){ reviews = []; }
 function saveReviews(){ localStorage.setItem("warungKentangReviews", JSON.stringify(reviews)); }
 
 let lastOrderId = null;
@@ -710,7 +702,7 @@ function goToPage(target){
   document.querySelectorAll("nav a[data-target]").forEach(a => a.classList.toggle("active", a.dataset.target === target));
   window.scrollTo({ top:0, behavior:"smooth" });
   mainNav.classList.remove("open");
-  if(target === "testimoni") renderTestimoni();
+  if(target === "testimoni"){ renderTestimoni(); refreshReviewsFromSheet(); }
   if(target === "riwayat"){ renderRiwayat(); renderSheetStatus(); }
   if(target === "beranda") renderStats();
 }
@@ -866,8 +858,40 @@ function syncOrderToSheet(order){
     total: order.total
   });
 }
-function syncRatingToSheet(orderId, rating, comment){
-  sendToSheet("rating", { orderId, date: fmtDate(new Date().toISOString()), rating, comment: comment || "(tanpa komentar)" });
+function syncRatingToSheet(orderId, rating, comment, customerName){
+  sendToSheet("rating", { orderId, date: fmtDate(new Date().toISOString()), rating, comment: comment || "(tanpa komentar)", customerName: customerName || "-" });
+}
+
+/* ---------------- pull real ratings from every customer via Apps Script GET ---------------- */
+async function fetchReviewsFromSheet(){
+  if(!GOOGLE_SCRIPT_URL) return null;
+  try{
+    const res = await fetch(`${GOOGLE_SCRIPT_URL}?action=ratings`, { method:"GET" });
+    if(!res.ok) return null;
+    const data = await res.json();
+    if(!Array.isArray(data)) return null;
+    return data
+      .filter(r => r && r.rating)
+      .map(r => ({
+        id: "sheet-" + r.orderId,
+        orderId: r.orderId,
+        name: r.name && r.name !== "-" ? r.name : "Pelanggan " + r.orderId,
+        rating: Number(r.rating),
+        comment: r.comment && r.comment !== "(tanpa komentar)" ? r.comment : "(tanpa komentar)",
+        date: r.date ? new Date(r.date).toISOString() : new Date().toISOString()
+      }))
+      .sort((a, b) => new Date(b.date) - new Date(a.date));
+  }catch(e){
+    return null; // koneksi gagal / GET belum tersedia di Apps Script — tetap pakai data lokal
+  }
+}
+async function refreshReviewsFromSheet(){
+  const sheetReviews = await fetchReviewsFromSheet();
+  if(!sheetReviews) return; // GET belum diaktifkan / gagal, biarkan data yang sudah ada
+  reviews = sheetReviews;
+  saveReviews();
+  renderTestimoni();
+  renderStats();
 }
 
 /* ---------------- checkout -> whatsapp + sync order ---------------- */
@@ -953,18 +977,23 @@ ratingOverlay.addEventListener("click", (e) => { if(e.target === ratingOverlay) 
 submitRating.addEventListener("click", () => {
   if(selectedStars === 0 || !lastOrderId) return;
   const comment = document.getElementById("reviewText").value.trim();
-  const review = { id:"r"+Date.now(), name:"Pelanggan " + lastOrderId, rating:selectedStars, comment: comment || "(tanpa komentar)", date:new Date().toISOString() };
+  const o0 = orders.find(o => o.id === lastOrderId);
+  const reviewerName = (o0 && o0.customerName) ? o0.customerName : "Pelanggan " + lastOrderId;
+  const review = { id:"r"+Date.now(), orderId:lastOrderId, name:reviewerName, rating:selectedStars, comment: comment || "(tanpa komentar)", date:new Date().toISOString() };
   reviews.unshift(review);
   saveReviews();
 
   const o = orders.find(o => o.id === lastOrderId);
   if(o){ o.rating = selectedStars; o.comment = comment; saveOrders(); }
-  syncRatingToSheet(lastOrderId, selectedStars, comment);
+  syncRatingToSheet(lastOrderId, selectedStars, comment, reviewerName);
 
   closeRatingModal();
   showToast("Terima kasih atas rating & ulasannya!");
   renderTestimoni();
   renderStats();
+
+  // beri waktu sebentar untuk penulisan ke sheet, lalu tarik data terbaru dari semua pelanggan
+  setTimeout(refreshReviewsFromSheet, 1500);
 });
 
 /* ---------------- testimoni page ---------------- */
@@ -1077,6 +1106,7 @@ renderCart();
 renderStats();
 renderSheetStatus();
 updateOpenStatus();
+refreshReviewsFromSheet();
 setInterval(updateOpenStatus, 60000);
 </script>
 </body>
