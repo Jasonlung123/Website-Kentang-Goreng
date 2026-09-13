@@ -594,10 +594,12 @@ footer{background:var(--wood);color:var(--cream);padding:34px 28px;}
   <div class="drawer-foot">
     <div class="total-row"><span>Total</span><span id="cartTotal">Rp 0</span></div>
     <div class="customer-form">
-      <label for="custPhone">Nomor WhatsApp <span class="req">*</span></label>
+      <label for="custPhone">Nomor WhatsApp <span class="opt">(opsional)</span></label>
       <input type="tel" id="custPhone" placeholder="08xxxxxxxxxx" inputmode="numeric">
       <label for="custName">Nama <span class="opt">(opsional)</span></label>
       <input type="text" id="custName" placeholder="Nama kamu">
+      <label for="custNote">Catatan <span class="opt">(opsional, tapi bisa memudahkan)</span></label>
+      <input type="text" id="custNote" placeholder="Contoh: pedas dikit, kirim ke Jl. Contoh No. 5, dll">
     </div>
     <p class="drawer-note">Klik "Pesan via WhatsApp" untuk mengirim pesanan — otomatis tercatat ke spreadsheet toko.</p>
     <div class="checkout-actions">
@@ -842,14 +844,14 @@ document.getElementById("closeCart").addEventListener("click", closeDrawer);
 overlay.addEventListener("click", closeDrawer);
 
 /* ---------------- order build helpers ---------------- */
-function buildOrderFromCart(customerName, customerPhone){
+function buildOrderFromCart(customerName, customerPhone, customerNote){
   const items = Object.entries(cart).map(([id, qty]) => {
     const p = PRODUCTS.find(x => x.id === id);
     return { id, name:p.name, qty, price:p.price, subtotal:p.price*qty };
   });
   const total = items.reduce((s,i) => s + i.subtotal, 0);
   const orderId = "WK-" + String(orders.length + 1).padStart(4, "0");
-  return { id:orderId, date:new Date().toISOString(), items, total, rating:null, comment:null, customerName: customerName || "", customerPhone };
+  return { id:orderId, date:new Date().toISOString(), items, total, rating:null, comment:null, customerName: customerName || "", customerPhone: customerPhone || "", customerNote: customerNote || "" };
 }
 
 /* ---------------- google sheets sync helpers ---------------- */
@@ -858,7 +860,8 @@ function syncOrderToSheet(order){
     orderId: order.id,
     date: fmtDate(order.date),
     customerName: order.customerName || "-",
-    customerPhone: order.customerPhone,
+    customerPhone: order.customerPhone || "-",
+    customerNote: order.customerNote || "-",
     items: order.items.map(i => ({ name:i.name, qty:i.qty, price:i.price, subtotal:i.subtotal })),
     total: order.total
   });
@@ -874,24 +877,24 @@ document.getElementById("checkoutBtn").addEventListener("click", () => {
 
   const phoneInput = document.getElementById("custPhone");
   const nameInput = document.getElementById("custName");
+  const noteInput = document.getElementById("custNote");
   const phone = phoneInput.value.trim();
   const name = nameInput.value.trim();
+  const note = noteInput.value.trim();
 
-  if(!phone){
-    showToast("Isi nomor WhatsApp dulu ya");
-    phoneInput.focus();
-    return;
-  }
-
-  const order = buildOrderFromCart(name, phone);
+  const order = buildOrderFromCart(name, phone, note);
   orders.push(order);
   saveOrders();
   lastOrderId = order.id;
 
   let message = `Halo Warung Kentang, saya mau pesan (${order.id}):%0A`;
-  message += `Nama: ${name || "-"}%0A`;
-  message += `No. WhatsApp: ${phone}%0A%0A`;
+  let infoLines = "";
+  if(name) infoLines += `Nama: ${name}%0A`;
+  if(phone) infoLines += `No. WhatsApp: ${phone}%0A`;
+  if(infoLines) message += infoLines;
+  message += `%0A`;
   order.items.forEach(i => { message += `- ${i.name} x${i.qty} (${rupiah(i.subtotal)})%0A`; });
+  if(note) message += `%0ACatatan: ${note}%0A`;
   message += `%0ATotal: ${rupiah(order.total)}`;
   const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${message}`;
   window.open(url, "_blank");
@@ -903,6 +906,7 @@ document.getElementById("checkoutBtn").addEventListener("click", () => {
   renderCart();
   phoneInput.value = "";
   nameInput.value = "";
+  noteInput.value = "";
   closeDrawer();
   showToast("Pesanan terkirim & tercatat ke toko");
 
