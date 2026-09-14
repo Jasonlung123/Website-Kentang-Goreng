@@ -162,6 +162,13 @@ nav a.active{color:var(--paper);background:var(--wood);}
 
 /* ---------- menu ---------- */
 .filter-row{display:flex;gap:10px;flex-wrap:wrap;}
+.cat-tabs{display:flex;flex-wrap:wrap;gap:10px;max-width:1120px;margin:0 auto 20px;}
+.cat-btn{background:var(--wood-2);color:var(--cream);border:2px solid transparent;border-radius:999px;padding:9px 18px;font-weight:600;font-size:13.5px;display:flex;align-items:center;gap:6px;transition:background .15s ease, transform .1s ease;}
+.cat-btn:hover{background:#7d5230;}
+.cat-btn.active{background:var(--gold);color:var(--wood);border-color:var(--wood);}
+.cat-count{background:rgba(0,0,0,.2);border-radius:999px;font-size:11px;padding:1px 7px;}
+.cat-btn.active .cat-count{background:rgba(0,0,0,.15);}
+
 .chip{
   background:transparent;border:2px solid rgba(255,255,255,.35);color:var(--cream);padding:8px 16px;
   border-radius:999px;font-weight:600;font-size:13.5px;
@@ -355,9 +362,101 @@ footer{background:var(--wood);color:var(--cream);padding:34px 28px;}
   .wrap,.nav-row,.topbar-row{padding-left:18px;padding-right:18px;}
   .section-pad{padding:48px 18px 60px;}
 }
+/* ---------- loading screen ---------- */
+#loadingScreen{
+  position:fixed;
+  inset:0;
+  z-index:999;
+  background:var(--wood);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:18px;
+  transition:opacity .45s ease, visibility .45s ease;
+}
+#loadingScreen.hide{
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+}
+.loading-mark{
+  width:78px;height:78px;
+  border-radius:50%;
+  background:var(--ketchup);
+  border:3px solid var(--gold);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Baloo 2',sans-serif;
+  font-weight:800;
+  font-size:30px;
+  color:var(--mayo);
+  animation:loadingPulse 1.4s ease-in-out infinite;
+}
+@keyframes loadingPulse{
+  0%,100%{transform:scale(1);}
+  50%{transform:scale(1.08);}
+}
+.loading-title{
+  font-family:'Baloo 2',sans-serif;
+  font-weight:700;
+  font-size:20px;
+  color:var(--cream);
+  letter-spacing:0.3px;
+}
+.loading-bar-track{
+  width:200px;
+  height:8px;
+  border-radius:999px;
+  background:rgba(255,246,232,0.18);
+  overflow:hidden;
+}
+.loading-bar-fill{
+  height:100%;
+  width:0%;
+  border-radius:999px;
+  background:var(--gold);
+  transition:width .25s ease;
+}
+.loading-pct{
+  font-family:'Work Sans',sans-serif;
+  font-size:13px;
+  color:var(--gold);
+  font-weight:600;
+  letter-spacing:0.3px;
+}
+.loading-skip{
+  margin-top:6px;
+  background:transparent;
+  border:2px solid var(--cream);
+  color:var(--cream);
+  padding:9px 20px;
+  border-radius:999px;
+  font-weight:600;
+  font-size:13.5px;
+  transition:background .15s ease, color .15s ease;
+}
+.loading-skip:hover{
+  background:var(--cream);
+  color:var(--wood);
+}
+@media (prefers-reduced-motion: reduce){
+  .loading-mark{animation:none;}
+  #loadingScreen{transition:none;}
+}
+
 </style>
 </head>
 <body>
+
+<div id="loadingScreen">
+  <div class="loading-mark">KG</div>
+  <div class="loading-title">Menyiapkan menu&hellip;</div>
+  <div class="loading-bar-track">
+    <div class="loading-bar-fill" id="loadingBarFill"></div>
+  </div>
+  <div class="loading-pct" id="loadingPct">0%</div>
+  <button class="loading-skip" id="loadingSkip" type="button">Lewati &rsaquo;</button>
+</div>
 
 <header>
   <div class="topbar">
@@ -474,6 +573,7 @@ footer{background:var(--wood);color:var(--cream);padding:34px 28px;}
         <h2>Menu Kentang Goreng</h2>
         <p>Kentang, kentang tumbuk, minuman, dan paket hemat — tambahkan ke keranjang lalu pesan sekaligus lewat WhatsApp.</p>
       </div>
+      <div class="cat-tabs" id="catTabs"></div>
       <div class="filter-row" id="filterRow"></div>
     </div>
     <div class="menu-grid" id="menuGrid"></div>
@@ -650,21 +750,158 @@ function sendToSheet(action, payload){
   }).catch(() => { /* fire-and-forget: network hiccups shouldn't block the order */ });
 }
 
+
+// 10 kategori menu (ditambahkan dari index 2) + kategori Paket khusus index 3
+const CATEGORIES = [
+  { id: "kentang", name: "Kentang Goreng" },
+  { id: "burger",  name: "Burger" },
+  { id: "pizza",   name: "Pizza" },
+  { id: "ayam",    name: "Ayam Goreng" },
+  { id: "nasi",    name: "Nasi Goreng" },
+  { id: "mie",     name: "Mie Goreng" },
+  { id: "salad",   name: "Salad" },
+  { id: "seafood", name: "Seafood" },
+  { id: "dessert", name: "Dessert" },
+  { id: "minuman", name: "Minuman" },
+  { id: "paket",   name: "Paket" }
+];
+
+// helper: direct Pexels CDN image (real photos, all distinct, no duplicates)
+const px = (id) => `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&w=800`;
+
 const PRODUCTS = [
-  { id:"tomat", name:"Kentang Goreng (Saus Tomat)", desc:"Kentang goreng klasik potongan panjang, disajikan dengan saus tomat segar untuk cocolan.", price:15000, img:"images/tomat.jpg", tag:"Klasik" },
-  { id:"mayo", name:"Kentang Goreng (Saus Mayo)", desc:"Kentang goreng garing ditaburi rempah, dipadukan dengan saus mayo creamy.", price:17000, img:"images/mayo.jpg", tag:"Creamy" },
-  { id:"keju", name:"Kentang Goreng (Keju)", desc:"Kentang goreng crinkle cut disiram saus keju cheddar leleh yang gurih.", price:22000, img:"images/keju.jpg", tag:"Favorit" },
-  { id:"keriting", name:"Kentang Goreng (Keriting)", desc:"Kentang keriting berbumbu spiral, renyah di luar dan tetap lembut di dalam.", price:18000, img:"images/keriting.jpg", tag:"Renyah" },
-  { id:"kentang-tumbuk", name:"Kentang Tumbuk", desc:"Mashed potato lembut dengan taburan daun bawang, dipadukan mentega gurih.", price:20000, img:"images/kentang-tumbuk.jpg", tag:"Menu Lain" },
-  { id:"es-teh", name:"Es Teh Manis", desc:"Teh hitam seduh klasik, disajikan dingin dengan es batu penuh.", price:6000, img:"images/es-teh.png", tag:"Minuman" },
-  { id:"es-teh-lemon", name:"Es Teh Lemon", desc:"Es teh segar dengan perasan jeruk nipis, manis-asam yang menyegarkan.", price:8000, img:"images/es-teh-lemon.jpg", tag:"Minuman" },
-  { id:"es-milo", name:"Es Milo", desc:"Susu cokelat malt Milo dikocok dingin dengan es, kental dan creamy.", price:12000, img:"images/es-milo.jpg", tag:"Minuman" },
+  { id:"tomat", name:"Kentang Goreng (Saus Tomat)", desc:"Kentang goreng klasik potongan panjang, disajikan dengan saus tomat segar untuk cocolan.", price:15000, img:"images/tomat.jpg", tag:"Klasik", category:"kentang" },
+  { id:"mayo", name:"Kentang Goreng (Saus Mayo)", desc:"Kentang goreng garing ditaburi rempah, dipadukan dengan saus mayo creamy.", price:17000, img:"images/mayo.jpg", tag:"Creamy", category:"kentang" },
+  { id:"keju", name:"Kentang Goreng (Keju)", desc:"Kentang goreng crinkle cut disiram saus keju cheddar leleh yang gurih.", price:22000, img:"images/keju.jpg", tag:"Favorit", category:"kentang" },
+  { id:"keriting", name:"Kentang Goreng (Keriting)", desc:"Kentang keriting berbumbu spiral, renyah di luar dan tetap lembut di dalam.", price:18000, img:"images/keriting.jpg", tag:"Renyah", category:"kentang" },
+  { id:"kentang-tumbuk", name:"Kentang Tumbuk", desc:"Mashed potato lembut dengan taburan daun bawang, dipadukan mentega gurih.", price:20000, img:"images/kentang-tumbuk.jpg", tag:"Menu Lain", category:"kentang" },
+  { id:"es-teh", name:"Es Teh Manis", desc:"Teh hitam seduh klasik, disajikan dingin dengan es batu penuh.", price:6000, img:"images/es-teh.png", tag:"Minuman", category:"minuman" },
+  { id:"es-teh-lemon", name:"Es Teh Lemon", desc:"Es teh segar dengan perasan jeruk nipis, manis-asam yang menyegarkan.", price:8000, img:"images/es-teh-lemon.jpg", tag:"Minuman", category:"minuman" },
+  { id:"es-milo", name:"Es Milo", desc:"Susu cokelat malt Milo dikocok dingin dengan es, kental dan creamy.", price:12000, img:"images/es-milo.jpg", tag:"Minuman", category:"minuman" },
   { id:"paket-solo", name:"Paket Hemat Solo", desc:"1 Kentang Goreng Saus Mayo + 1 Es Teh Manis. Pas buat ngemil sendirian.", price:19000, originalPrice:23000, img:"images/mayo.jpg", tag:"Paket",
-    bundle:[{id:"mayo",qty:1},{id:"es-teh",qty:1}] },
+    bundle:[{id:"mayo",qty:1},{id:"es-teh",qty:1}], category:"paket" },
   { id:"paket-berdua", name:"Paket Berdua", desc:"2 Kentang Goreng Keju + 2 Es Teh Manis. Cocok buat nemenin nonton berdua.", price:49000, originalPrice:56000, img:"images/keju.jpg", tag:"Paket",
-    bundle:[{id:"keju",qty:2},{id:"es-teh",qty:2}] },
+    bundle:[{id:"keju",qty:2},{id:"es-teh",qty:2}], category:"paket" },
   { id:"paket-nongkrong", name:"Paket Nongkrong (4 Orang)", desc:"2 Kentang Goreng Keju, 2 Kentang Goreng Keriting, 2 Es Teh Lemon, 2 Es Milo.", price:105000, originalPrice:120000, img:"images/keriting.jpg", tag:"Paket",
-    bundle:[{id:"keju",qty:2},{id:"keriting",qty:2},{id:"es-teh-lemon",qty:2},{id:"es-milo",qty:2}] }
+    bundle:[{id:"keju",qty:2},{id:"keriting",qty:2},{id:"es-teh-lemon",qty:2},{id:"es-milo",qty:2}], category:"paket" },
+
+  // ==== menu tambahan dari index 2 (10 kategori) ====
+
+  // ---- Kentang Goreng (foto asli dari repo) ----
+  { id: "kentang-pedas", name: "Kentang Goreng Pedas", desc: "Kentang goreng renyah dibaluri bubuk cabai pedas untuk sensasi rasa yang menggigit.", price: 19000, img: px(4109234), tag: "Pedas", category: "kentang" },
+  { id: "kentang-sambal", name: "Kentang Goreng Sambal Rica", desc: "Kentang goreng disiram sambal rica-rica dengan taburan daun bawang segar.", price: 20000, img: px(11485199), tag: "Pedas", category: "kentang" },
+  { id: "kentang-blackpepper", name: "Kentang Goreng Lada Hitam", desc: "Kentang goreng ditaburi bumbu lada hitam yang gurih dan sedikit pedas.", price: 21000, img: px(15656541), tag: "Gurih", category: "kentang" },
+  { id: "kentang-balado", name: "Kentang Goreng Balado", desc: "Kentang goreng dengan bumbu balado khas nusantara yang pedas manis.", price: 20000, img: px(12946719), tag: "Balado", category: "kentang" },
+  { id: "kentang-mustard", name: "Kentang Goreng Saus Mustard", desc: "Kentang goreng klasik dipadukan dengan saus mustard yang segar dan tajam.", price: 18000, img: px(8467836), tag: "Segar", category: "kentang" },
+  { id: "kentang-dapur", name: "Kentang Goreng Original Dapur", desc: "Kentang goreng polos disajikan hangat langsung dari dapur, cocok untuk semua.", price: 15000, img: px(30528927), tag: "Original", category: "kentang" },
+
+  // ---- Burger ----
+  { id: "burger-klasik", name: "Burger Sapi Klasik", desc: "Daging sapi panggang, keju leleh, selada dan saus spesial di antara roti lembut.", price: 25000, img: px(19247562), tag: "Klasik", category: "burger" },
+  { id: "burger-bacon", name: "Burger Bacon Gurih", desc: "Burger gourmet dengan bacon renyah, karamel bawang, dan saus creamy.", price: 28000, img: px(18713424), tag: "Gourmet", category: "burger" },
+  { id: "burger-original", name: "Burger Original", desc: "Burger sederhana dengan patty juicy, keju, dan roti panggang hangat.", price: 23000, img: px(2657960), tag: "Best Seller", category: "burger" },
+  { id: "burger-doublecheese", name: "Burger Double Cheese", desc: "Burger dengan dua lapis keju leleh dan daging sapi panggang yang juicy.", price: 30000, img: px(19247582), tag: "Cheese Lover", category: "burger" },
+  { id: "burger-premium", name: "Burger Sapi Panggang Premium", desc: "Burger daging sapi panggang dengan roti sesame lembut dan keju cheddar.", price: 32000, img: px(1639562), tag: "Premium", category: "burger" },
+  { id: "burger-friescombo", name: "Paket Burger & Kentang", desc: "Burger klasik disajikan lengkap dengan kentang goreng renyah di piring putih.", price: 34000, img: px(19642), tag: "Paket Hemat", category: "burger" },
+  { id: "burger-spinach", name: "Burger Sandwich Bayam", desc: "Burger dengan tambahan bayam segar dan roti panggang wangi, ringan dan sehat.", price: 26000, img: px(2015097), tag: "Sehat", category: "burger" },
+  { id: "burger-wedges", name: "Burger Wedges Saus Spesial", desc: "Burger gourmet dengan kentang wedges dan saus spesial di atas piring hitam.", price: 29000, img: px(1199957), tag: "Gourmet", category: "burger" },
+  { id: "burger-doublebacon", name: "Burger Double Bacon", desc: "Burger dengan bacon renyah berlapis dan keju cheddar leleh yang gurih.", price: 31000, img: px(2089717), tag: "Bacon Lover", category: "burger" },
+  { id: "burger-mushroom", name: "Burger Jamur Keju", desc: "Burger dengan tambahan jamur tumis dan keju leleh yang creamy.", price: 29000, img: px(17325900), tag: "Gourmet", category: "burger" },
+
+  // ---- Pizza ----
+  { id: "pizza-pepperoni", name: "Pizza Pepperoni", desc: "Pizza dengan taburan pepperoni melimpah dan keju mozarella meleleh.", price: 45000, img: px(4109048), tag: "Favorit", category: "pizza" },
+  { id: "pizza-margherita", name: "Pizza Margherita", desc: "Pizza klasik Italia dengan saus tomat segar, mozarella, dan basil.", price: 42000, img: px(19533168), tag: "Klasik", category: "pizza" },
+  { id: "pizza-veggie", name: "Pizza Sayur & Paprika", desc: "Pizza dengan topping paprika, jamur, dan sayuran segar pilihan.", price: 40000, img: px(842519), tag: "Sehat", category: "pizza" },
+  { id: "pizza-slice-take", name: "Pizza Slice To Go", desc: "Satu potong pizza keju melimpah, cocok untuk camilan cepat saji.", price: 15000, img: px(19374362), tag: "To Go", category: "pizza" },
+  { id: "pizza-box", name: "Pizza Pepperoni Box", desc: "Pizza pepperoni hangat langsung dari kotak, keju meleleh sempurna.", price: 44000, img: px(4109111), tag: "Favorit", category: "pizza" },
+  { id: "pizza-panggang", name: "Pizza Pepperoni Panggang", desc: "Pizza pepperoni panggang dengan potongan disajikan hangat untuk berbagi.", price: 43000, img: px(29605927), tag: "Panggang", category: "pizza" },
+  { id: "pizza-bacon", name: "Pizza Bacon Mozarella", desc: "Pizza dengan taburan bacon, mozarella melimpah, dan sedikit basil segar.", price: 46000, img: px(2762942), tag: "Gurih", category: "pizza" },
+  { id: "pizza-cheeseklasik", name: "Pizza Keju Klasik", desc: "Pizza keju klasik dengan lelehan cheddar yang gurih dan tipis renyah.", price: 38000, img: px(2741457), tag: "Klasik", category: "pizza" },
+  { id: "pizza-mozzarella", name: "Pizza Mozarella Melimpah", desc: "Pizza dengan lelehan keju mozarella yang menggoda dan tekstur crispy.", price: 42000, img: px(17800186), tag: "Cheese Lover", category: "pizza" },
+  { id: "pizza-simple", name: "Pizza Keju Sederhana", desc: "Pizza keju sederhana dengan cita rasa gurih yang selalu disukai.", price: 36000, img: px(13214436), tag: "Sederhana", category: "pizza" },
+
+  // ---- Ayam Goreng ----
+  { id: "ayam-krispi", name: "Ayam Goreng Krispi + Kentang", desc: "Ayam goreng tepung super renyah, disajikan dengan kentang goreng.", price: 27000, img: px(14686448), tag: "Krispi", category: "ayam" },
+  { id: "ayam-original", name: "Ayam Goreng Original", desc: "Ayam goreng bumbu rempah khas dengan kulit renyah dan daging juicy.", price: 24000, img: px(12118979), tag: "Original", category: "ayam" },
+  { id: "ayam-nasi", name: "Ayam Goreng + Nasi", desc: "Paket ayam goreng dengan nasi hangat dan taburan bawang goreng.", price: 26000, img: px(5618848), tag: "Paket Hemat", category: "ayam" },
+  { id: "ayam-friessalad", name: "Ayam Krispi + Salad", desc: "Ayam goreng krispi disajikan dengan kentang, salad, dan saus cocolan.", price: 29000, img: px(15390177), tag: "Paket Lengkap", category: "ayam" },
+  { id: "ayam-tender", name: "Chicken Tender Saus Creamy", desc: "Potongan ayam tender renyah disajikan dengan saus creamy yang lezat.", price: 25000, img: px(29653191), tag: "Tender", category: "ayam" },
+  { id: "ayam-wings", name: "Sayap Ayam Goreng Krispi", desc: "Sayap ayam goreng garing keemasan, gurih di setiap gigitan.", price: 23000, img: px(32067295), tag: "Krispi", category: "ayam" },
+  { id: "ayam-takeout", name: "Ayam Goreng Paket Takeaway", desc: "Ayam goreng renyah dengan kentang goreng dalam kemasan takeaway.", price: 28000, img: px(33569113), tag: "Takeaway", category: "ayam" },
+  { id: "ayam-wingpedas", name: "Sayap Ayam Pedas", desc: "Sayap ayam goreng dengan bumbu pedas yang menggugah selera.", price: 24000, img: px(13795311), tag: "Pedas", category: "ayam" },
+  { id: "ayam-mangkok", name: "Ayam Goreng Mangkok", desc: "Potongan ayam goreng renyah disajikan hangat dalam mangkok saji.", price: 25000, img: px(4253705), tag: "Hangat", category: "ayam" },
+  { id: "ayam-bento", name: "Ayam Goreng Bento", desc: "Ayam goreng krispi dengan nasi dan acar dalam satu paket bento.", price: 27000, img: px(6249394), tag: "Bento", category: "ayam" },
+
+  // ---- Nasi Goreng ----
+  { id: "nasi-spesial", name: "Nasi Goreng Spesial", desc: "Nasi goreng dengan telur, sate, kerupuk, dan acar segar.", price: 22000, img: px(30604609), tag: "Spesial", category: "nasi" },
+  { id: "nasi-kampung", name: "Nasi Goreng Kampung", desc: "Nasi goreng gaya kampung dengan bumbu tradisional yang gurih.", price: 20000, img: px(6937455), tag: "Tradisional", category: "nasi" },
+  { id: "nasi-seafood", name: "Nasi Goreng Seafood", desc: "Nasi goreng dengan udang segar dan bumbu khas seafood.", price: 25000, img: px(14072789), tag: "Seafood", category: "nasi" },
+  { id: "nasi-telur", name: "Nasi Goreng Telur Mata Sapi", desc: "Nasi goreng sederhana dengan telur mata sapi dan taburan bawang goreng.", price: 19000, img: px(4940832), tag: "Klasik", category: "nasi" },
+  { id: "nasi-ayamsuwir", name: "Nasi Goreng Ayam Suwir", desc: "Nasi goreng dengan ayam suwir gurih dan nasi putih pulen di sampingnya.", price: 23000, img: px(12916867), tag: "Ayam", category: "nasi" },
+  { id: "nasi-wok", name: "Nasi Goreng Wok Panas", desc: "Nasi goreng dimasak langsung di atas wok panas untuk aroma yang khas.", price: 21000, img: px(6937447), tag: "Wok", category: "nasi" },
+  { id: "nasi-salmon", name: "Nasi Goreng Salmon Sayur", desc: "Nasi goreng dengan potongan salmon panggang dan sayuran segar.", price: 28000, img: px(11129150), tag: "Premium", category: "nasi" },
+  { id: "nasi-sausmerah", name: "Nasi Goreng Saus Merah", desc: "Nasi goreng dengan telur dan saus merah pedas manis khas rumahan.", price: 20000, img: px(8688803), tag: "Pedas Manis", category: "nasi" },
+  { id: "nasi-sayur", name: "Nasi Goreng Sayuran", desc: "Nasi goreng dengan campuran sayuran segar dan rumput laut.", price: 19000, img: px(6645977), tag: "Sehat", category: "nasi" },
+  { id: "nasi-bento", name: "Nasi Goreng Bento Ayam", desc: "Nasi goreng dengan ayam dan acar sayur disajikan dalam bento box.", price: 24000, img: px(6249398), tag: "Bento", category: "nasi" },
+
+  // ---- Mie Goreng ----
+  { id: "mie-bakso", name: "Mie Goreng Bakso", desc: "Mie goreng dengan potongan bakso sapi dan sayuran segar.", price: 18000, img: px(2764905), tag: "Favorit", category: "mie" },
+  { id: "mie-ayam", name: "Mie Ayam Spesial", desc: "Mie kenyal dengan topping ayam suwir dan kuah kaldu gurih.", price: 19000, img: px(5409020), tag: "Spesial", category: "mie" },
+  { id: "mie-tarik", name: "Mie Tarik Sayur", desc: "Mie tarik lembut dengan tumisan sayuran segar dan bumbu wok.", price: 17000, img: px(2347311), tag: "Sehat", category: "mie" },
+  { id: "mie-udon", name: "Mie Udon Sayur", desc: "Mie udon tebal ditumis bersama sayuran segar dan wijen renyah.", price: 20000, img: px(34599523), tag: "Udon", category: "mie" },
+  { id: "mie-basil", name: "Mie Goreng Cabai Basil", desc: "Mie goreng dengan saus merah pedas dan taburan daun basil segar.", price: 18000, img: px(5848494), tag: "Pedas", category: "mie" },
+  { id: "mie-chowmein", name: "Mie Goreng Ayam Chow Mein", desc: "Mie chow mein dengan ayam suwir dan taburan bawang bombay.", price: 19000, img: px(24738507), tag: "Chow Mein", category: "mie" },
+  { id: "mie-kuahayam", name: "Mie Kuah Ayam", desc: "Mie kuah hangat dengan potongan ayam dan kaldu gurih menyegarkan.", price: 19000, img: px(30392957), tag: "Kuah", category: "mie" },
+  { id: "mie-seafood", name: "Mie Kuah Seafood", desc: "Mie kuah dengan campuran udang, telur, dan bumbu kaldu spesial.", price: 22000, img: px(9772439), tag: "Seafood", category: "mie" },
+  { id: "mie-pedasbasil", name: "Mie Goreng Saus Pedas", desc: "Mie goreng saus merah pedas dengan taburan daun basil harum.", price: 18000, img: px(3828943), tag: "Pedas", category: "mie" },
+  { id: "mie-herbs", name: "Mie Goreng Rempah Segar", desc: "Mie goreng dengan taburan rempah segar dan bawang daun wangi.", price: 19000, img: px(30506298), tag: "Rempah", category: "mie" },
+
+  // ---- Salad ----
+  { id: "salad-sayur", name: "Salad Sayur Segar", desc: "Campuran sayuran segar dengan tomat ceri dan dressing ringan.", price: 16000, img: px(4198015), tag: "Sehat", category: "salad" },
+  { id: "salad-mix", name: "Salad Sayur Mix", desc: "Salad sayuran warna-warni dengan saus creamy pilihan.", price: 17000, img: px(5966438), tag: "Segar", category: "salad" },
+  { id: "salad-segar", name: "Salad Segar Klasik", desc: "Salad sayur klasik dengan potongan telur dan sayuran renyah.", price: 15000, img: px(1555814), tag: "Klasik", category: "salad" },
+  { id: "salad-feta", name: "Salad Feta Walnut", desc: "Salad segar dengan keju feta, kacang walnut, dan daun hijau renyah.", price: 21000, img: px(4869356), tag: "Premium", category: "salad" },
+  { id: "salad-telur", name: "Salad Sayur Telur", desc: "Salad sayuran segar dengan potongan telur rebus dan wortel renyah.", price: 17000, img: px(406152), tag: "Sehat", category: "salad" },
+  { id: "salad-siap", name: "Salad Sayur Siap Saji", desc: "Salad sayuran segar yang disiapkan langsung dengan tangan penuh perhatian.", price: 16000, img: px(9004736), tag: "Segar", category: "salad" },
+  { id: "salad-cheese", name: "Salad Sayur Saus Keju", desc: "Salad campuran sayuran dengan saus keju creamy yang lembut.", price: 18000, img: px(8535717), tag: "Creamy", category: "salad" },
+  { id: "salad-quinoa", name: "Salad Quinoa Sehat", desc: "Salad quinoa dengan sayuran segar, cocok untuk gaya hidup sehat.", price: 22000, img: px(28618632), tag: "Quinoa", category: "salad" },
+  { id: "salad-asia", name: "Salad Sayur Ala Asia", desc: "Salad sayuran segar disajikan dengan sumpit gaya oriental.", price: 17000, img: px(7660426), tag: "Asia", category: "salad" },
+  { id: "salad-caesar", name: "Salad Caesar Ayam", desc: "Salad caesar dengan ayam panggang, crouton, dan keju parmesan.", price: 24000, img: px(12557608), tag: "Caesar", category: "salad" },
+
+  // ---- Seafood ----
+  { id: "seafood-cumi", name: "Cumi & Udang Goreng", desc: "Cumi dan udang segar digoreng garing dengan bumbu spesial.", price: 32000, img: px(29617469), tag: "Gurih", category: "seafood" },
+  { id: "seafood-udang", name: "Udang Bakar Madu", desc: "Udang bakar dengan olesan madu manis dan sedikit pedas.", price: 30000, img: px(1998920), tag: "Manis Pedas", category: "seafood" },
+  { id: "seafood-platter", name: "Seafood Platter", desc: "Kombinasi seafood panggang dengan aneka bumbu rempah.", price: 45000, img: px(4571250), tag: "Premium", category: "seafood" },
+  { id: "seafood-pasta", name: "Seafood Pasta Kerang", desc: "Pasta seafood dengan kerang dan udang segar, disajikan dengan anggur putih.", price: 38000, img: px(3649208), tag: "Pasta", category: "seafood" },
+  { id: "seafood-burger", name: "Burger Udang Krispi", desc: "Burger dengan patty udang krispi dan rumput laut renyah.", price: 29000, img: px(5860588), tag: "Burger Seafood", category: "seafood" },
+  { id: "seafood-panggang", name: "Udang Panggang Sayur", desc: "Udang panggang disajikan dengan sayuran segar di piring hitam.", price: 33000, img: px(15387324), tag: "Panggang", category: "seafood" },
+  { id: "seafood-cumilemon", name: "Cumi & Udang Goreng Lemon", desc: "Cumi dan udang goreng renyah disajikan dengan irisan lemon segar.", price: 31000, img: px(921367), tag: "Segar", category: "seafood" },
+  { id: "seafood-udangkupas", name: "Udang Kupas Panggang", desc: "Udang kupas panggang matang sempurna, siap disantap langsung.", price: 30000, img: px(10487767), tag: "Praktis", category: "seafood" },
+  { id: "seafood-ikanbakar", name: "Ikan Bakar Fillet", desc: "Fillet ikan panggang dengan aroma smoky yang gurih.", price: 34000, img: px(8352799), tag: "Ikan", category: "seafood" },
+  { id: "seafood-ikangoreng", name: "Ikan Goreng Sayur", desc: "Ikan goreng disajikan dengan sayuran segar dan microgreens.", price: 32000, img: px(1510714), tag: "Ikan", category: "seafood" },
+
+  // ---- Dessert ----
+  { id: "dessert-cokelat", name: "Kue Cokelat Lumer", desc: "Kue cokelat lembut dengan lelehan cokelat di bagian dalam.", price: 18000, img: px(18131293), tag: "Manis", category: "dessert" },
+  { id: "dessert-nutella", name: "Cokelat Nutella Cake", desc: "Kue cokelat dengan topping nutella dan taburan cokelat batang.", price: 20000, img: px(11076351), tag: "Favorit", category: "dessert" },
+  { id: "dessert-spesial", name: "Cokelat Cake Spesial", desc: "Kue cokelat spesial dengan hiasan buah segar di atasnya.", price: 19000, img: px(6054918), tag: "Spesial", category: "dessert" },
+  { id: "dessert-kacang", name: "Kue Cokelat Kacang", desc: "Kue cokelat lembut dengan taburan kacang, disajikan bersama kopi hangat.", price: 19000, img: px(2267868), tag: "Kacang", category: "dessert" },
+  { id: "dessert-mousse", name: "Cokelat Mousse Cake", desc: "Kue mousse cokelat lembut dengan tekstur creamy yang meleleh di mulut.", price: 22000, img: px(1854652), tag: "Mousse", category: "dessert" },
+  { id: "dessert-gingerbread", name: "Cokelat Cake Gingerbread", desc: "Kue cokelat dengan taburan gingerbread manis dan frosting lembut.", price: 20000, img: px(30128890), tag: "Spesial", category: "dessert" },
+  { id: "dessert-layer", name: "Cokelat Cake Layer", desc: "Potongan kue cokelat berlapis dengan frosting cokelat yang kaya rasa.", price: 21000, img: px(19940993), tag: "Berlapis", category: "dessert" },
+  { id: "dessert-berry", name: "Cokelat Cake Krim Buah", desc: "Kue cokelat dengan lapisan krim dan buah beri segar di dalamnya.", price: 23000, img: px(3740237), tag: "Buah", category: "dessert" },
+  { id: "dessert-mousseslice", name: "Cokelat Mousse Slice", desc: "Potongan mousse cokelat dengan whipped cream dan taburan kacang.", price: 22000, img: px(8601851), tag: "Creamy", category: "dessert" },
+  { id: "dessert-caramel", name: "Cokelat Cake Karamel", desc: "Kue cokelat dengan siraman karamel manis di atasnya.", price: 21000, img: px(12115182), tag: "Karamel", category: "dessert" },
+
+  // ---- Minuman ----
+  { id: "minuman-matcha", name: "Es Matcha", desc: "Matcha hijau dingin yang menyegarkan, cocok menemani makanan berat.", price: 14000, img: px(6249729), tag: "Segar", category: "minuman" },
+  { id: "minuman-kopi", name: "Es Kopi Susu", desc: "Kopi susu dingin dengan rasa creamy dan sedikit manis.", price: 15000, img: px(6921351), tag: "Favorit", category: "minuman" },
+  { id: "minuman-tehpeach", name: "Es Teh Peach", desc: "Teh dingin dengan aroma buah persik yang menyegarkan.", price: 12000, img: px(5598273), tag: "Segar", category: "minuman" },
+  { id: "minuman-kopicreamy", name: "Es Kopi Susu Creamy", desc: "Kopi susu dingin dengan tekstur creamy yang lembut di gelas kaca.", price: 16000, img: px(11100423), tag: "Creamy", category: "minuman" },
+  { id: "minuman-kopikaramel", name: "Es Kopi Karamel", desc: "Kopi dingin dengan sirup karamel manis dan foam lembut.", price: 17000, img: px(18281881), tag: "Manis", category: "minuman" },
+  { id: "minuman-matchalatte", name: "Es Matcha Latte", desc: "Matcha latte dingin dengan foam creamy yang menyegarkan.", price: 16000, img: px(29156485), tag: "Latte", category: "minuman" },
+  { id: "minuman-matchasusu", name: "Es Matcha Susu", desc: "Matcha hijau dipadukan dengan susu segar dan es batu dingin.", price: 15000, img: px(5946969), tag: "Segar", category: "minuman" },
+  { id: "minuman-tehsegar", name: "Es Teh Segar", desc: "Teh dingin segar dengan irisan buah sebagai penyegar dahaga.", price: 11000, img: px(1484678), tag: "Segar", category: "minuman" },
+  { id: "minuman-jerukperas", name: "Es Jeruk Peras", desc: "Jeruk peras segar dengan sedikit lemon untuk rasa yang menyegarkan.", price: 13000, img: px(96620), tag: "Vitamin C", category: "minuman" },
+  { id: "minuman-lemonsquash", name: "Es Lemon Squash", desc: "Lemon segar diperas dan dicampur air soda dingin yang menyegarkan.", price: 14000, img: px(6411492), tag: "Segar", category: "minuman" }
 ];
 
 const rupiah = (n) => "Rp " + n.toLocaleString("id-ID");
@@ -710,6 +947,27 @@ document.querySelectorAll("[data-target]").forEach(el => {
   el.addEventListener("click", (e) => { e.preventDefault(); goToPage(el.dataset.target); });
 });
 
+/* ---------------- kategori tabs (ditambahkan dari index 2) ---------------- */
+const catTabs = document.getElementById("catTabs");
+let activeCategory = "Semua";
+function countInCategory(catId){ return PRODUCTS.filter(p => p.category === catId).length; }
+function renderCatTabs(){
+  const cats = [{ id: "Semua", name: "Semua Menu" }, ...CATEGORIES];
+  catTabs.innerHTML = cats.map(c => `
+    <button class="cat-btn${c.id === activeCategory ? " active" : ""}" data-cat="${c.id}">
+      ${c.name} <span class="cat-count">${c.id === "Semua" ? PRODUCTS.length : countInCategory(c.id)}</span>
+    </button>
+  `).join("");
+}
+catTabs.addEventListener("click", (e) => {
+  const btn = e.target.closest(".cat-btn");
+  if(!btn) return;
+  activeCategory = btn.dataset.cat;
+  renderCatTabs();
+  renderMenu();
+});
+renderCatTabs();
+
 /* ---------------- menu render + filter ---------------- */
 const TAGS = ["Semua", ...Array.from(new Set(PRODUCTS.map(p => p.tag)))];
 let activeTag = "Semua";
@@ -724,7 +982,8 @@ TAGS.forEach(tag => {
 
 const menuGrid = document.getElementById("menuGrid");
 function renderMenu(){
-  const list = activeTag === "Semua" ? PRODUCTS : PRODUCTS.filter(p => p.tag === activeTag);
+  let list = activeCategory === "Semua" ? PRODUCTS : PRODUCTS.filter(p => p.category === activeCategory);
+  if(activeTag !== "Semua") list = list.filter(p => p.tag === activeTag);
   menuGrid.innerHTML = list.map(p => {
     const savings = p.originalPrice ? p.originalPrice - p.price : 0;
     const badgeText = savings > 0 ? `Hemat ${rupiah(savings)}` : p.tag;
@@ -1108,6 +1367,62 @@ renderSheetStatus();
 updateOpenStatus();
 refreshReviewsFromSheet();
 setInterval(updateOpenStatus, 60000);
+
+// ---------- loading screen ----------
+(function () {
+  const screen = document.getElementById("loadingScreen");
+  const fill = document.getElementById("loadingBarFill");
+  const pct = document.getElementById("loadingPct");
+  const skipBtn = document.getElementById("loadingSkip");
+  if (!screen) return;
+
+  // Sudah pernah lihat / lewati loading di sesi ini? langsung sembunyikan, tanpa animasi.
+  let alreadySeen = false;
+  try { alreadySeen = sessionStorage.getItem("warungKentangLoaded") === "1"; } catch (e) { alreadySeen = false; }
+  if (alreadySeen) {
+    screen.style.transition = "none";
+    screen.classList.add("hide");
+    return;
+  }
+
+  let progress = 0;
+  let finished = false;
+
+  function setProgress(value) {
+    progress = Math.max(progress, Math.min(value, 100));
+    fill.style.width = progress + "%";
+    pct.textContent = Math.round(progress) + "%";
+  }
+
+  function finishLoading() {
+    if (finished) return;
+    finished = true;
+    clearInterval(ticker);
+    setProgress(100);
+    setTimeout(() => {
+      screen.classList.add("hide");
+    }, 250);
+    try { sessionStorage.setItem("warungKentangLoaded", "1"); } catch (e) {}
+  }
+
+  // Progres semu: naik pelan menuju 90% sambil menunggu halaman & gambar selesai dimuat.
+  const ticker = setInterval(() => {
+    const step = progress < 60 ? 6 : progress < 85 ? 2 : 0.5;
+    setProgress(progress + step);
+    if (progress >= 90) clearInterval(ticker);
+  }, 180);
+
+  window.addEventListener("load", finishLoading);
+  // Jaga-jaga kalau event 'load' lambat atau tidak terpicu (koneksi lambat dsb).
+  setTimeout(finishLoading, 6000);
+
+  skipBtn.addEventListener("click", () => {
+    finished = true;
+    clearInterval(ticker);
+    screen.classList.add("hide");
+    try { sessionStorage.setItem("warungKentangLoaded", "1"); } catch (e) {}
+  });
+})();
 </script>
 </body>
 </html>
